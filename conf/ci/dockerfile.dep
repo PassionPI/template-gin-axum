@@ -2,7 +2,7 @@ FROM registry.cn-hangzhou.aliyuncs.com/jrjr/rust:1.80.0-slim AS builder
 
 WORKDIR /app
 
-ARG APP_NAME=template-axum
+ARG APP_NAME=template-gin-axum
 ARG APP_TARGET=x86_64-unknown-linux-musl
 
 ENV RUSTUP_DIST_SERVER="https://rsproxy.cn"

@@ -1601,7 +1601,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "template-axum"
+name = "template-gin-axum"
 version = "0.1.0"
 dependencies = [
  "axum",

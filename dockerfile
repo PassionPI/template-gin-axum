@@ -1,6 +1,6 @@
 FROM template-gin-axum:dep AS builder
 
-ARG APP_NAME=template-axum
+ARG APP_NAME=template-gin-axum
 ARG APP_TARGET=x86_64-unknown-linux-musl
 
 COPY src src
