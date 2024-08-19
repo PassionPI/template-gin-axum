@@ -15,7 +15,9 @@ RUN echo Y | apt-get update
 RUN echo Y | apt-get install musl-tools
 
 # 复制 Cargo.toml 和 Cargo.lock 文件到工作目录, 构建依赖项
-COPY Cargo.toml Cargo.lock ./
 COPY .cargo .cargo
-RUN mkdir src && touch src/main.rs && echo 'fn main() {}' >> src/main.rs
+COPY Cargo.toml Cargo.lock ./
+RUN mkdir src
+RUN touch src/main.rs
+RUN echo 'fn main() {}' >> src/main.rs
 RUN cargo build --release --target=$APP_TARGET
