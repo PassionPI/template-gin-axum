@@ -2,22 +2,19 @@ FROM registry.cn-hangzhou.aliyuncs.com/jrjr/rust:1.80.0-slim AS builder
 
 WORKDIR /app
 
-ARG APP_NAME=template-gin-axum
 ARG APP_TARGET=x86_64-unknown-linux-musl
 
 ENV RUSTUP_DIST_SERVER="https://rsproxy.cn"
 ENV RUSTUP_UPDATE_ROOT="https://rsproxy.cn/rustup"
 
-RUN rustup target add $APP_TARGET
-
 COPY conf/mirror/debian.sources /etc/apt/sources.list.d/debian.sources
 RUN echo Y | apt-get update
 RUN echo Y | apt-get install musl-tools
 
-# 复制 Cargo.toml 和 Cargo.lock 文件到工作目录, 构建依赖项
+RUN rustup target add $APP_TARGET
+RUN cargo init
+
+COPY Cargo.toml Cargo.toml
+COPY Cargo.lock Cargo.lock
 COPY .cargo .cargo
-COPY Cargo.toml Cargo.lock ./
-RUN mkdir src
-RUN touch src/main.rs
-RUN echo 'fn main() {}' >> src/main.rs
-RUN cargo build --release --target=$APP_TARGET
+RUN cargo fetch

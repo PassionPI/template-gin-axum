@@ -15,7 +15,7 @@ async fn main() {
 
 // which calls one of these handlers
 async fn root() -> &'static str {
-    "Hello, World!!!"
+    "Hello, World!!!!x"
 }
 async fn get_foo() {}
 async fn post_foo() {}

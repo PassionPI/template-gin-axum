@@ -4,7 +4,11 @@ docker-dep:
 
 .PHONY: docker-build
 docker-build:
-	sudo docker build -t template-gin-axum:1 .
+	sudo docker build -t template-gin-axum:1 -f conf/ci/dockerfile .
+
+.PHONY: docker-run
+docker-run:
+	sudo docker run --rm -p 9988:3000 template-gin-axum:1
 
 .PHONY: dev
 dev:
