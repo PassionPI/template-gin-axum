@@ -3,10 +3,7 @@ use std::sync::Arc;
 use axum::{extract::Query, response::IntoResponse, Extension, Json};
 
 use super::{middleware::jwt::Claims, AppError};
-use crate::{
-    core::dep::Dep,
-    model::{rm_pagination_option, OptionPagination},
-};
+use crate::{core::dep::Dep, model::common::OptionPagination};
 
 pub async fn add(
     Extension(dep): Extension<Arc<Dep>>,
@@ -28,12 +25,11 @@ pub async fn put(
 pub async fn list(
     Extension(dep): Extension<Arc<Dep>>,
     Extension(claims): Extension<Claims>,
-    Query(option_pagination): Query<OptionPagination>,
+    Query(pagination): Query<OptionPagination>,
 ) -> Result<impl IntoResponse, AppError> {
-    let pagination = rm_pagination_option(option_pagination);
     let todo = dep
         .pg
-        .todo_find_by_username(&claims.username, &pagination)
+        .todo_find_by_username(&claims.username, &pagination.default())
         .await?;
     Ok(Json(todo))
 }

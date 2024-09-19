@@ -13,16 +13,16 @@ use std::{
     str,
 };
 
-const PEM_DIR: &'static str = "pem";
-const PUBLIC_NAME: &'static str = "public.pem";
-const PRIVATE_NAME: &'static str = "private.pem";
+const PEM_DIR: &str = "pem";
+const PUBLIC_NAME: &str = "public.pem";
+const PRIVATE_NAME: &str = "private.pem";
 
-fn get_private_path(private_dir: &str) -> String {
-    format!("{}/{}/{}", private_dir, PEM_DIR, PRIVATE_NAME)
+fn get_private_path(dir_private: &str) -> String {
+    format!("{}/{}/{}", dir_private, PEM_DIR, PRIVATE_NAME)
 }
 
-fn get_public_path(private_dir: &str) -> String {
-    format!("{}/{}/{}", private_dir, PEM_DIR, PUBLIC_NAME)
+fn get_public_path(dir_private: &str) -> String {
+    format!("{}/{}/{}", dir_private, PEM_DIR, PUBLIC_NAME)
 }
 
 fn read_pem_file(file_path: &str) -> String {
@@ -60,11 +60,11 @@ pub struct Rsa {
 }
 
 impl Rsa {
-    pub fn new(private_dir: &str) -> Self {
-        let private_path = get_private_path(private_dir);
-        let public_path = get_public_path(private_dir);
+    pub fn new(dir_private: &str) -> Self {
+        let private_path = get_private_path(dir_private);
+        let public_path = get_public_path(dir_private);
 
-        if fs::metadata(&private_path).is_ok() == false {
+        if fs::metadata(&private_path).is_err() {
             println!("Generate pem files.");
 
             let mut rng = rand::thread_rng();
@@ -117,20 +117,19 @@ impl Rsa {
         let mut rng = rand::thread_rng();
         let padding = Oaep::new::<Sha256>();
         self.public_key
-            .encrypt(&mut rng, padding, &data[..])
+            .encrypt(&mut rng, padding, data)
             .expect("Failed to encrypt")
     }
     pub fn decrypt(&self, data: &[u8]) -> Result<Vec<u8>> {
         let padding = Oaep::new::<Sha256>();
-        Ok(self
-            .private_key
+        self.private_key
             .decrypt(padding, data)
-            .context("Fail to decrypt &[u8]")?)
+            .context("Fail to decrypt &[u8]")
     }
     pub fn decrypt_base64(&self, data: &str) -> Result<Vec<u8>> {
         let u8 = &BASE64_STANDARD
             .decode(data)
             .context("Failed to decode base64")?;
-        Ok(self.decrypt(u8)?)
+        self.decrypt(u8)
     }
 }

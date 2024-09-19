@@ -1,0 +1,12 @@
+CREATE TABLE IF NOT EXISTS todo (
+    id BIGSERIAL PRIMARY KEY,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deadline TIMESTAMPTZ,
+    username VARCHAR(24) NOT NULL,
+    title VARCHAR(24) NOT NULL,
+    done BOOLEAN DEFAULT false,
+    description VARCHAR(128)
+);
+
+CREATE INDEX IF NOT EXISTS idx_todo_username ON todo (username);

@@ -40,8 +40,8 @@ pub async fn login(
     let password = String::from_utf8(dep.rsa.decrypt_base64(&credentials.password)?)?;
 
     if user.password == password {
-        return Ok(dep.jwt_encode(user.username)?.to_owned().into_response());
+        Ok(dep.jwt_encode(user.username)?.to_owned().into_response())
     } else {
-        return Ok((StatusCode::BAD_REQUEST, "Password invalid!".to_string()).into_response());
+        Ok((StatusCode::BAD_REQUEST, "Password invalid!".to_string()).into_response())
     }
 }

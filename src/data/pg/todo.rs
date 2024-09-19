@@ -1,6 +1,6 @@
 use crate::model::{
+    common::Pagination,
     todo::{TodoCreateItem, TodoDelItem, TodoScanItem, TodoUpdateItem},
-    Pagination,
 };
 
 use super::Pg;
@@ -45,7 +45,7 @@ impl Pg {
         )
         .bind(username)
         .bind(&insert.title)
-        .bind(&insert.deadline)
+        .bind(insert.deadline)
         .bind(&insert.description)
         .execute(&self.pool)
         .await?;
@@ -58,15 +58,15 @@ impl Pg {
             "
             UPDATE todo
             SET 
-                updated_at = NOW(),
+                updated_at = CURRENT_TIMESTAMP,
                 done = $1,
                 deadline = $2
             WHERE id = $3
             ",
         )
-        .bind(&update.done)
-        .bind(&update.deadline)
-        .bind(&update.id)
+        .bind(update.done)
+        .bind(update.deadline)
+        .bind(update.id)
         .execute(&self.pool)
         .await?;
 
@@ -80,7 +80,7 @@ impl Pg {
             WHERE id = $1
             ",
         )
-        .bind(&del.id)
+        .bind(del.id)
         .execute(&self.pool)
         .await?;
 

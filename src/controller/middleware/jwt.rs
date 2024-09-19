@@ -40,14 +40,14 @@ impl Dep {
             username,
             exp,
         };
-        let key = EncodingKey::from_secret(self.env.jwt_secret.as_ref());
+        let key = EncodingKey::from_secret(self.env.secret_jwt.as_ref());
 
         Ok(encode(&header, &claims, &key)?)
     }
     pub fn jwt_decode(&self, token: &str) -> anyhow::Result<TokenData<Claims>> {
         let token = decode::<Claims>(
-            &token,
-            &DecodingKey::from_secret(self.env.jwt_secret.as_ref()),
+            token,
+            &DecodingKey::from_secret(self.env.secret_jwt.as_ref()),
             &Validation::default(),
         )?;
 

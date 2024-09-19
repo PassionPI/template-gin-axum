@@ -7,7 +7,7 @@ impl Pg {
         let row = sqlx::query_as::<_, Credentials>(
             "
             SELECT username, password 
-            FROM users
+            FROM user_base
             WHERE username = $1
             ",
         )
@@ -21,7 +21,7 @@ impl Pg {
     pub async fn user_insert(&self, credentials: &Credentials) -> anyhow::Result<()> {
         sqlx::query(
             "
-            INSERT INTO users (username, password)
+            INSERT INTO user_base (username, password)
             VALUES ($1, $2)
             ",
         )

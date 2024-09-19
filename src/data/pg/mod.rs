@@ -1,3 +1,11 @@
+pub mod friend;
+pub mod friend_request;
+pub mod note;
+pub mod note_comment;
+pub mod note_image;
+pub mod note_tag;
+pub mod notice;
+pub mod subscriber;
 pub mod todo;
 pub mod user;
 
@@ -14,42 +22,28 @@ impl Pg {
             .await
             .expect("Failed to create postgres pool");
         println!("Connected to postgres.");
+
+        sqlx::migrate!("./sql")
+            .run(&pool)
+            .await
+            .expect("Migrate error!");
+
         ensure_table_exists(
             &pool,
             vec![
-                &create_table_sql(
-                    "users",
-                    vec![
-                        "id         BIGSERIAL PRIMARY KEY",
-                        "username   TEXT NOT NULL UNIQUE",
-                        "created_at TIMESTAMPTZ DEFAULT (NOW() AT TIME ZONE 'UTC')",
-                        "updated_at TIMESTAMPTZ DEFAULT (NOW() AT TIME ZONE 'UTC')",
-                        "password   TEXT NOT NULL",
-                        "role       TEXT",
-                        "nickname   TEXT",
-                        "avatar     TEXT",
-                    ],
-                ),
-                &create_index_sql("users", "role"),
-                &create_index_sql("users", "nickname"),
-                &create_table_sql(
-                    "todo",
-                    vec![
-                        "id          BIGSERIAL PRIMARY KEY",
-                        "created_at  TIMESTAMPTZ DEFAULT (NOW() AT TIME ZONE 'UTC')",
-                        "updated_at  TIMESTAMPTZ DEFAULT (NOW() AT TIME ZONE 'UTC')",
-                        "deadline    TIMESTAMPTZ",
-                        "username    TEXT NOT NULL",
-                        "title       TEXT NOT NULL",
-                        "done        BOOLEAN DEFAULT false",
-                        "description TEXT",
-                    ],
-                ),
+                &create_index_sql("user_base", "role"),
+                &create_index_sql("user_base", "nickname"),
                 &create_index_sql("todo", "username"),
+                &create_index_sql("note", "user_id"),
+                &create_index_sql("friend", "id_a"),
+                &create_index_sql("friend", "id_b"),
+                &create_index_sql("friend", "status"),
+                &create_index_sql("friend_request", "user_by"),
+                &create_index_sql("friend_request", "user_to"),
+                &create_index_sql("friend_request", "status"),
             ],
         )
         .await;
-        println!("Execute the initial sql.");
 
         Self { pool }
     }
@@ -65,25 +59,6 @@ async fn ensure_table_exists(pool: &PgPool, sql: Vec<&str>) {
         .execute(pool)
         .await
         .expect("Error Exec Initial SQL");
-}
-
-fn create_table_sql(table_name: &str, kv: Vec<&str>) -> String {
-    let creator = "CREATE TABLE IF NOT EXISTS";
-    let start = format!("{} {} (", creator, table_name);
-    let last = kv.len() - 1;
-
-    let mut columns = String::new();
-
-    for (i, v) in kv.iter().enumerate() {
-        columns += v;
-        if i != last {
-            columns += ",";
-        }
-    }
-
-    let end = ");";
-
-    start + &columns + &end
 }
 
 fn create_index_sql(table_name: &str, column: &str) -> String {

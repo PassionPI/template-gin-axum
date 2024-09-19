@@ -7,10 +7,11 @@ use std::env;
 #[derive(Clone)]
 pub struct Env {
     pub port: String,
-    pub db_rd_uri: String,
-    pub db_pg_uri: String,
-    pub jwt_secret: Vec<u8>,
-    pub private_dir: String,
+    pub uri_db_rd: String,
+    pub uri_db_pg: String,
+    pub secret_jwt: Vec<u8>,
+    pub dir_private: String,
+    pub dir_asset: String,
 }
 
 impl Env {
@@ -19,24 +20,26 @@ impl Env {
             Ok(port) => port,
             Err(_) => "8060".to_string(),
         };
-        let db_rd_uri = match env::var("REDIS_URI") {
+        let uri_db_rd = match env::var("REDIS_URI") {
             Ok(uri) => uri,
             Err(_) => "".to_string(),
         };
-        let db_pg_uri = match env::var("POSTGRES_URI") {
+        let uri_db_pg = match env::var("POSTGRES_URI") {
             Ok(uri) => uri,
             Err(_) => "".to_string(),
         };
-        let jwt_secret = match env::var("JWT_SECRET") {
+        let secret_jwt = match env::var("JWT_SECRET") {
             Ok(secret) => secret.into_bytes(),
             Err(_) => "".to_string().into_bytes(),
         };
+
         Self {
             port,
-            db_rd_uri,
-            db_pg_uri,
-            jwt_secret,
-            private_dir: "./private".to_string(),
+            uri_db_rd,
+            uri_db_pg,
+            secret_jwt,
+            dir_private: "./private".to_string(),
+            dir_asset: "/asset".to_string(),
         }
     }
 }
@@ -52,9 +55,9 @@ pub struct Dep {
 impl Dep {
     pub async fn new() -> Self {
         let env = Env::new();
-        let rsa = Rsa::new(&env.private_dir);
-        let pg = Pg::new(&env.db_pg_uri).await;
-        let rd = Rd::new(&env.db_rd_uri).await;
+        let rsa = Rsa::new(&env.dir_private);
+        let pg = Pg::new(&env.uri_db_pg).await;
+        let rd = Rd::new(&env.uri_db_rd).await;
         Self { env, rsa, pg, rd }
     }
 }

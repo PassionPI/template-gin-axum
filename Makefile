@@ -22,6 +22,7 @@ dev:
 .PHONY: fmt
 fmt:
 	cargo fmt
+	cargo clippy
 
 .PHONY: test
 test:

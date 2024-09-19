@@ -18,11 +18,16 @@ use crate::{
 pub async fn create() -> (Router, Arc<Dep>) {
     let dep = Arc::new(Dep::new().await);
 
+    let fs = Router::new().nest_service(
+        &dep.env.dir_asset,
+        ServeDir::new(dep.env.dir_private.clone() + &dep.env.dir_asset),
+    );
+
     (
         Router::new()
-            .route_service("/static/*path", ServeDir::new(&dep.env.private_dir))
             .nest("/api", router_api())
             .nest("/open", router_open())
+            .fallback_service(fs)
             .layer(from_fn(limiter))
             .layer(from_fn(logger))
             .layer(Extension(dep.clone())),

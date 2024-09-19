@@ -25,7 +25,7 @@ pub async fn limiter(mut req: Request, next: Next) -> Result<impl IntoResponse, 
         "{}:{}:{}",
         req.uri().path(),
         "middleware.limiter",
-        addr.ip().to_string()
+        addr.ip()
     );
 
     let mut conn = dep.rd.conn().await?;
