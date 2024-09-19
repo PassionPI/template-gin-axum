@@ -57,23 +57,27 @@ impl Dep {
 
 pub async fn auth(mut req: Request, next: Next) -> impl IntoResponse {
     let dep = req.extensions().get::<Arc<Dep>>().unwrap();
-    let auth_header = req
-        .headers()
-        .get(http::header::AUTHORIZATION)
-        .and_then(|header| header.to_str().ok());
 
-    let auth_header = match auth_header {
-        Some(auth_header) => auth_header.replace("Bearer ", ""),
+    let token = match req
+        .headers()
+        .get(http::header::COOKIE)
+        .and_then(|header| header.to_str().ok())
+        .and_then(|cookie| {
+            cookie
+                .split("; ")
+                .collect::<Vec<&str>>()
+                .into_iter()
+                .find(|cookie| cookie.starts_with("Auth="))
+        })
+        .and_then(|auth| auth.strip_prefix("Auth="))
+    {
+        Some(cookie) => cookie,
         None => {
-            return (
-                StatusCode::UNAUTHORIZED,
-                "Authorization header missing".to_string(),
-            )
-                .into_response()
+            return (StatusCode::UNAUTHORIZED, "Auth cookie missing".to_string()).into_response()
         }
     };
 
-    let jwt = match dep.jwt_decode(&auth_header) {
+    let jwt = match dep.jwt_decode(token) {
         Ok(jwt) => jwt,
         Err(e) => {
             return (
