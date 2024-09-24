@@ -28,7 +28,7 @@ pub async fn limiter(mut req: Request, next: Next) -> Result<impl IntoResponse, 
         addr.ip()
     );
 
-    let mut conn = dep.rd.conn().await?;
+    let mut conn = dep.rd.conn.clone();
 
     let count = conn.get(&key).await.unwrap_or(MIN);
 
