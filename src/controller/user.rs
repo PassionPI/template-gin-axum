@@ -1,14 +1,9 @@
 use std::sync::Arc;
 
-use axum::{
-    body::Body,
-    http::{Response, StatusCode},
-    response::IntoResponse,
-    Extension, Json,
-};
+use axum::{http::StatusCode, response::IntoResponse, Extension, Json};
 use validator::Validate;
 
-use crate::{core::dep::Dep, model::user::Credentials, pkg::util::set_cookie_auth};
+use crate::{core::dep::Dep, model::user::Credentials, pkg::util::create_auth_response};
 
 use super::AppError;
 
@@ -27,13 +22,9 @@ pub async fn sign(
 
     dep.pg.user_insert(&credentials).await?;
 
-    let token = dep.jwt_encode(credentials.username)?;
+    let token = dep.jwt_encode(credentials.username.clone())?;
 
-    let mut res = Response::new(Body::empty());
-
-    res = set_cookie_auth(res, &token)?;
-
-    Ok(res)
+    Ok(create_auth_response(&token, &credentials.username)?)
 }
 
 pub async fn login(
@@ -51,11 +42,7 @@ pub async fn login(
         return Ok((StatusCode::BAD_REQUEST, "Password invalid!".to_string()).into_response());
     }
 
-    let token = dep.jwt_encode(user.username)?;
+    let token = dep.jwt_encode(user.username.clone())?;
 
-    let mut res = Response::new(Body::empty());
-
-    res = set_cookie_auth(res, &token)?;
-
-    Ok(res)
+    Ok(create_auth_response(&token, &user.username)?)
 }

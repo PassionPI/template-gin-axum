@@ -12,7 +12,11 @@ use jsonwebtoken::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::core::dep::Dep;
+use crate::{
+    core::dep::Dep,
+    data::{JWT_DAYS_EXP, JWT_DAYS_REFRESH},
+    pkg::util::set_auth_cookie,
+};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Claims {
@@ -27,7 +31,7 @@ impl Dep {
         // user_id: i64,
         username: String,
     ) -> anyhow::Result<String> {
-        let exp = match Utc::now().checked_add_signed(Duration::days(7)) {
+        let exp = match Utc::now().checked_add_signed(Duration::days(JWT_DAYS_EXP)) {
             Some(exp) => exp.timestamp_millis(),
             None => {
                 return Err(anyhow::anyhow!("Failed to generate token"));
@@ -56,7 +60,16 @@ impl Dep {
 }
 
 pub async fn auth(mut req: Request, next: Next) -> impl IntoResponse {
-    let dep = req.extensions().get::<Arc<Dep>>().unwrap();
+    let dep = match req.extensions().get::<Arc<Dep>>() {
+        Some(dep) => dep.clone(),
+        None => {
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Dependency not found".to_string(),
+            )
+                .into_response();
+        }
+    };
 
     let token = match req
         .headers()
@@ -88,10 +101,41 @@ pub async fn auth(mut req: Request, next: Next) -> impl IntoResponse {
         }
     };
 
-    if Utc::now().timestamp_millis() > jwt.claims.exp {
+    let exp = jwt.claims.exp.to_owned();
+    let now = Utc::now().timestamp_millis();
+    let username = jwt.claims.username.clone();
+
+    if now > exp {
         return (StatusCode::UNAUTHORIZED, "Token has expired.".to_string()).into_response();
     }
 
     req.extensions_mut().insert(jwt.claims);
-    next.run(req).await.into_response()
+
+    let mut response = next.run(req).await.into_response();
+
+    let token = match dep.jwt_encode(username) {
+        Ok(token) => token,
+        Err(e) => {
+            return (
+                StatusCode::UNAUTHORIZED,
+                "Failed to generate token: ".to_string() + &e.to_string(),
+            )
+                .into_response();
+        }
+    };
+
+    if exp - now < JWT_DAYS_REFRESH * 24 * 60 * 60 * 1000 {
+        match set_auth_cookie(&mut response, &token) {
+            Ok(_) => (),
+            Err(e) => {
+                return (
+                    StatusCode::UNAUTHORIZED,
+                    "Failed to set cookie: ".to_string() + &e.to_string(),
+                )
+                    .into_response();
+            }
+        }
+    }
+
+    response.into_response()
 }
