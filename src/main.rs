@@ -15,14 +15,17 @@ async fn main() {
 
     let listener = tokio::net::TcpListener::bind(format!("{}:{}", "0.0.0.0", dep.env.port))
         .await
-        .unwrap();
+        .expect("could not bind to address");
 
-    println!("Listening on http://{}", listener.local_addr().unwrap());
+    println!(
+        "Listening on http://{}",
+        listener.local_addr().expect("could not determine address")
+    );
 
     axum::serve(
         listener,
         app.into_make_service_with_connect_info::<SocketAddr>(),
     )
     .await
-    .unwrap();
+    .expect("server failed");
 }

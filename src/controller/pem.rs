@@ -2,8 +2,8 @@ use std::sync::Arc;
 
 use axum::{response::IntoResponse, Extension};
 
-use crate::core::dep::Dep;
+use crate::core::Core;
 
-pub async fn get_public_pem(Extension(dep): Extension<Arc<Dep>>) -> impl IntoResponse {
-    dep.rsa.get_public_pem().to_owned()
+pub async fn get_public_pem(Extension(core): Extension<Arc<Core>>) -> impl IntoResponse {
+    core.rsa.get_public_pem().to_owned()
 }

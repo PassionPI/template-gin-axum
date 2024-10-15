@@ -13,7 +13,7 @@ use jsonwebtoken::{
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    core::dep::Dep,
+    core::Core,
     data::{JWT_DAYS_EXP, JWT_DAYS_REFRESH},
     pkg::util::set_auth_cookie,
 };
@@ -25,7 +25,7 @@ pub struct Claims {
     pub username: String,
 }
 
-impl Dep {
+impl Core {
     pub fn jwt_encode(
         &self,
         // user_id: i64,
@@ -60,8 +60,8 @@ impl Dep {
 }
 
 pub async fn auth(mut req: Request, next: Next) -> impl IntoResponse {
-    let dep = match req.extensions().get::<Arc<Dep>>() {
-        Some(dep) => dep.clone(),
+    let core = match req.extensions().get::<Arc<Core>>() {
+        Some(core) => core.clone(),
         None => {
             return (
                 StatusCode::INTERNAL_SERVER_ERROR,
@@ -90,7 +90,7 @@ pub async fn auth(mut req: Request, next: Next) -> impl IntoResponse {
         }
     };
 
-    let jwt = match dep.jwt_decode(token) {
+    let jwt = match core.jwt_decode(token) {
         Ok(jwt) => jwt,
         Err(e) => {
             return (
@@ -113,7 +113,7 @@ pub async fn auth(mut req: Request, next: Next) -> impl IntoResponse {
 
     let mut response = next.run(req).await.into_response();
 
-    let token = match dep.jwt_encode(username) {
+    let token = match core.jwt_encode(username) {
         Ok(token) => token,
         Err(e) => {
             return (

@@ -10,7 +10,7 @@ use axum::{
 };
 use redis::AsyncCommands;
 
-use crate::{controller::AppError, core::dep::Dep};
+use crate::{controller::AppError, core::Core};
 
 const INC: i64 = 1;
 const MIN: i64 = 1;
@@ -19,7 +19,16 @@ const EXPIRE: i64 = 60;
 
 pub async fn limiter(mut req: Request, next: Next) -> Result<impl IntoResponse, AppError> {
     let addr = req.extract_parts::<ConnectInfo<SocketAddr>>().await?;
-    let dep = req.extensions().get::<Arc<Dep>>().unwrap();
+    let core = match req.extensions().get::<Arc<Core>>() {
+        Some(core) => core,
+        None => {
+            return Ok((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Dependency not found".to_string(),
+            )
+                .into_response())
+        }
+    };
 
     let key = format!(
         "{}:{}:{}",
@@ -28,7 +37,7 @@ pub async fn limiter(mut req: Request, next: Next) -> Result<impl IntoResponse, 
         addr.ip()
     );
 
-    let mut conn = dep.rd.conn.clone();
+    let mut conn = core.rd.conn.clone();
 
     let count = conn.get(&key).await.unwrap_or(MIN);
 

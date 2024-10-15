@@ -12,15 +12,15 @@ use crate::{
         middleware::{jwt::auth, limiter::limiter, logger::logger},
         pem, ping, todo, user,
     },
-    core::dep::Dep,
+    core::Core,
 };
 
-pub async fn create() -> (Router, Arc<Dep>) {
-    let dep = Arc::new(Dep::new().await);
+pub async fn create() -> (Router, Arc<Core>) {
+    let core = Arc::new(Core::new().await);
 
     let fs = Router::new().nest_service(
-        &dep.env.dir_asset,
-        ServeDir::new(dep.env.dir_private.clone() + &dep.env.dir_asset),
+        &core.env.dir_asset,
+        ServeDir::new(core.env.dir_private.clone() + &core.env.dir_asset),
     );
 
     (
@@ -30,8 +30,8 @@ pub async fn create() -> (Router, Arc<Dep>) {
             .fallback_service(fs)
             .layer(from_fn(limiter))
             .layer(from_fn(logger))
-            .layer(Extension(dep.clone())),
-        dep,
+            .layer(Extension(core.clone())),
+        core,
     )
 }
 

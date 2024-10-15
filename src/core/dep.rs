@@ -43,21 +43,3 @@ impl Env {
         }
     }
 }
-
-#[derive(Clone)]
-pub struct Dep {
-    pub env: Env,
-    pub rsa: Rsa,
-    pub pg: Pg,
-    pub rd: Rd,
-}
-
-impl Dep {
-    pub async fn new() -> Self {
-        let env = Env::new();
-        let rsa = Rsa::new(&env.dir_private);
-        let pg = Pg::new(&env.uri_db_pg).await;
-        let rd = Rd::new(&env.uri_db_rd).await;
-        Self { env, rsa, pg, rd }
-    }
-}
