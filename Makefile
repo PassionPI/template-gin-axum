@@ -63,4 +63,4 @@ docker-build:
 
 .PHONY: docker-run
 docker-run:
-	sudo docker run --rm -p 9988:3000 template-gin-axum:1
+	sudo docker run --rm -p 9988:3000 template-gin-axum:3
