@@ -7,7 +7,7 @@ RUN cargo build --release
 RUN mv ./target/release/template-gin-axum ./x
 
 
-FROM registry.cn-hangzhou.aliyuncs.com/jrjr/alpine:3.20
+FROM registry.cn-hangzhou.aliyuncs.com/jrjr/debian:12-slim
 
 COPY --from=builder /app/x /bin
 
